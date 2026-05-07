@@ -1,7 +1,7 @@
 # Round 2 Concept: Multi Habit, Grass Views, and Toss Point Loop
 
 Date: 2026-05-07
-Status: concept/spec drafted after owner request
+Status: implemented in local MVP after owner request
 
 ## Owner Request
 
@@ -28,6 +28,18 @@ Key facts:
 ## Product Direction
 
 Move from `single representative habit` to `lightweight habit board`.
+
+## Implemented in Current Version
+
+- Multiple active habits.
+- Add/edit/archive habits.
+- Check/uncheck each habit for today.
+- Per-habit streak, total completions, and weekly strip.
+- Overall today completion progress.
+- Monthly grass heatmap.
+- Yearly grass heatmap.
+- Scope selector for all habits or a selected habit.
+- Apps in Toss / Toss Point mission concept card.
 
 ### Round 2 MVP Scope
 

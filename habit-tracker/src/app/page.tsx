@@ -64,6 +64,13 @@ const emptyDashboard: HabitDashboard = {
 };
 
 const suggestions = ["소비 내역 확인하기", "불필요한 소비 안 하기", "물 한 잔 마시기", "10분 걷기", "책 5쪽 읽기"];
+const cardTints = ["bg-blue-50", "bg-emerald-50", "bg-violet-50", "bg-orange-50", "bg-rose-50"];
+const navItems = [
+  { icon: "＋", label: "추가" },
+  { icon: "⌂", label: "오늘" },
+  { icon: "▦", label: "잔디" },
+  { icon: "★", label: "포인트" },
+];
 
 export default function Home() {
   const [dashboard, setDashboard] = useState<HabitDashboard>(emptyDashboard);
@@ -82,23 +89,23 @@ export default function Home() {
     if (dashboard.totalHabitCount === 0) {
       return {
         eyebrow: "오늘습관",
-        title: "여러 습관을 잔디처럼 쌓아봐요",
-        description: "토스에서 오늘 할 작은 루틴을 만들고, 월간·연간 잔디로 이어지는 성취감을 확인해요.",
+        title: "Build Habits",
+        description: "토스에서 오늘 할 작은 루틴을 만들고, 잔디처럼 성취를 쌓아봐요.",
       };
     }
 
     if (dashboard.todayCompletedCount === dashboard.totalHabitCount) {
       return {
         eyebrow: "오늘 루틴 완료",
-        title: "오늘 습관을 모두 해냈어요",
-        description: "작은 체크가 잔디처럼 쌓이고 있어요. 내일도 가볍게 이어가요.",
+        title: "Today",
+        description: "오늘 습관을 모두 해냈어요. 작은 체크가 잔디처럼 쌓이고 있어요.",
       };
     }
 
     return {
       eyebrow: "오늘의 루틴",
-      title: `${dashboard.totalHabitCount}개 중 ${dashboard.todayCompletedCount}개 완료`,
-      description: "완벽하지 않아도 괜찮아요. 지금 할 수 있는 습관 하나만 체크해요.",
+      title: "Today",
+      description: `${dashboard.totalHabitCount}개 중 ${dashboard.todayCompletedCount}개 완료했어요. 지금 할 수 있는 습관 하나만 체크해요.`,
     };
   }, [dashboard.todayCompletedCount, dashboard.totalHabitCount]);
 
@@ -232,30 +239,37 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f7fb] px-5 py-6 text-slate-950">
-      <section className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-[460px] flex-col">
+    <main className="min-h-screen bg-[#f5f7fb] px-4 py-5 text-slate-950">
+      <section className="mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-[460px] flex-col pb-24">
+        <TopBar title={primaryCopy.title} />
+
         <header className="pt-4">
           <p className="text-sm font-bold text-[#3182f6]">{primaryCopy.eyebrow}</p>
           <h1 className="mt-2 text-[32px] font-black leading-tight tracking-[-0.04em]">{primaryCopy.title}</h1>
           <p className="mt-3 text-[16px] leading-7 text-slate-500">{primaryCopy.description}</p>
         </header>
 
-        <div className="mt-8 flex flex-1 flex-col gap-4">
+        <DateStrip days={dashboard.habits[0]?.week ?? []} todayDate={dashboard.todayDate} />
+
+        <div className="mt-6 flex flex-1 flex-col gap-4">
           {isLoading ? (
             <LoadingCard />
           ) : (
             <>
-              <Card className="bg-slate-950 text-white ring-0">
+              <Card className="bg-white/90">
                 <div className="flex items-end justify-between gap-4">
                   <div>
-                    <p className="text-sm font-bold text-blue-200">오늘 진행률</p>
-                    <p className="mt-2 text-4xl font-black tracking-[-0.04em]">{progressRate}%</p>
+                    <p className="text-sm font-bold text-slate-400">Daily Progress</p>
+                    <p className="mt-1 text-4xl font-black tracking-[-0.05em]">{progressRate}%</p>
                   </div>
-                  <p className="rounded-2xl bg-white/10 px-4 py-2 text-sm font-black">
-                    {dashboard.todayCompletedCount}/{dashboard.totalHabitCount || 0} 완료
-                  </p>
+                  <div className="rounded-3xl bg-blue-50 px-4 py-3 text-right">
+                    <p className="text-xs font-black text-[#3182f6]">오늘 완료</p>
+                    <p className="text-lg font-black text-[#1b64da]">
+                      {dashboard.todayCompletedCount}/{dashboard.totalHabitCount || 0}
+                    </p>
+                  </div>
                 </div>
-                <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/10">
+                <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-100">
                   <div className="h-full rounded-full bg-[#3182f6] transition-all" style={{ width: `${progressRate}%` }} />
                 </div>
               </Card>
@@ -274,7 +288,7 @@ export default function Home() {
                       placeholder="예: 소비 내역 확인하기"
                       className="h-14 min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-base font-bold outline-none transition placeholder:text-slate-300 focus:border-[#3182f6] focus:ring-4 focus:ring-blue-100"
                     />
-                    <button disabled={isSaving} className="h-14 rounded-2xl bg-[#3182f6] px-5 font-black text-white disabled:opacity-50">
+                    <button disabled={isSaving} className="h-14 rounded-2xl bg-[#3182f6] px-5 font-black text-white shadow-lg shadow-blue-100 disabled:opacity-50">
                       추가
                     </button>
                   </div>
@@ -295,10 +309,11 @@ export default function Home() {
 
               {dashboard.habits.length ? (
                 <div className="space-y-3">
-                  {dashboard.habits.map((habit) => (
+                  {dashboard.habits.map((habit, index) => (
                     <HabitCard
                       key={habit.id}
                       habit={habit}
+                      tint={cardTints[index % cardTints.length]}
                       onToggle={() => void toggleTodayCheck(habit)}
                       onRename={() => void renameHabit(habit)}
                       onArchive={() => void archiveHabit(habit)}
@@ -315,17 +330,18 @@ export default function Home() {
               <Card>
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-black">잔디 보기</h2>
+                    <p className="text-sm font-black text-[#3182f6]">Habit Reports</p>
+                    <h2 className="mt-1 text-xl font-black">잔디 보기</h2>
                     <p className="mt-1 text-sm font-semibold text-slate-500">
-                      {selectedHabit ? selectedHabit.title : "전체 습관"} · {grassRange === "month" ? "이번 달" : "올해"}
+                      {selectedHabit ? selectedHabit.title : "전체 습관"} · {grassRange === "month" ? "Monthly" : "Yearly"}
                     </p>
                   </div>
                   <select
                     value={selectedHabitId}
                     onChange={(event) => void changeSelectedHabit(event.target.value)}
-                    className="h-10 rounded-xl bg-slate-100 px-2 text-sm font-bold outline-none"
+                    className="h-10 rounded-full bg-slate-100 px-3 text-sm font-bold outline-none"
                   >
-                    <option value="all">전체</option>
+                    <option value="all">All</option>
                     {dashboard.habits.map((habit) => (
                       <option key={habit.id} value={habit.id}>
                         {habit.title}
@@ -334,24 +350,26 @@ export default function Home() {
                   </select>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 rounded-2xl bg-slate-100 p-1">
-                  <button
-                    type="button"
-                    onClick={() => setGrassRange("month")}
-                    className={`h-10 rounded-xl text-sm font-black ${grassRange === "month" ? "bg-white text-[#3182f6] shadow-sm" : "text-slate-500"}`}
-                  >
-                    한달
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setGrassRange("year")}
-                    className={`h-10 rounded-xl text-sm font-black ${grassRange === "year" ? "bg-white text-[#3182f6] shadow-sm" : "text-slate-500"}`}
-                  >
-                    1년
-                  </button>
+                <div className="mt-4 flex gap-6 border-b border-slate-100 text-sm font-black">
+                  {(["month", "year"] as const).map((range) => (
+                    <button
+                      key={range}
+                      type="button"
+                      onClick={() => setGrassRange(range)}
+                      className={`border-b-2 pb-3 transition ${grassRange === range ? "border-[#3182f6] text-[#3182f6]" : "border-transparent text-slate-400"}`}
+                    >
+                      {range === "month" ? "Monthly" : "Yearly"}
+                    </button>
+                  ))}
                 </div>
 
                 <GrassHeatmap days={activeGrass} range={grassRange} />
+
+                <div className="mt-5 grid grid-cols-3 gap-2">
+                  <StatPill value={dashboard.todayCompletedCount} label="Met" />
+                  <StatPill value={dashboard.totalHabitCount} label="Habits" />
+                  <StatPill value={selectedHabit?.streak ?? 0} label="Best Streak" />
+                </div>
               </Card>
 
               <Card className="bg-blue-50 ring-blue-100">
@@ -382,33 +400,69 @@ export default function Home() {
             </div>
           ) : null}
         </div>
+
+        <BottomNav />
       </section>
     </main>
   );
 }
 
-function HabitCard({ habit, onToggle, onRename, onArchive }: { habit: HabitSummary; onToggle: () => void; onRename: () => void; onArchive: () => void }) {
+function TopBar({ title }: { title: string }) {
   return (
-    <Card>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: habit.color }} />
-            <p className="text-xs font-black text-slate-400">{habit.category}</p>
-          </div>
-          <h2 className="mt-2 truncate text-xl font-black tracking-[-0.03em]">{habit.title}</h2>
-          <p className="mt-1 text-sm font-bold text-slate-500">🔥 {habit.streak}일 연속 · 총 {habit.totalCompleted}번</p>
+    <div className="grid grid-cols-3 items-center pt-1">
+      <button className="w-fit rounded-full bg-white px-4 py-2 text-sm font-black text-slate-500 shadow-sm ring-1 ring-slate-100">All</button>
+      <p className="text-center text-lg font-black tracking-[-0.03em]">{title}</p>
+      <div className="justify-self-end rounded-full bg-white p-1 shadow-sm ring-1 ring-slate-100">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-lg">🧭</div>
+      </div>
+    </div>
+  );
+}
+
+function DateStrip({ days, todayDate }: { days: WeekDay[]; todayDate: string }) {
+  const fallbackDays = useMemo(() => makeFallbackDays(todayDate), [todayDate]);
+  const visibleDays = days.length ? days : fallbackDays;
+
+  return (
+    <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+      {visibleDays.map((day) => (
+        <div key={day.date} className={`flex min-w-14 flex-col items-center rounded-3xl px-3 py-3 ${day.isToday ? "bg-[#3182f6] text-white" : "bg-white text-slate-500 shadow-sm ring-1 ring-slate-100"}`}>
+          <p className="text-xs font-black opacity-80">{day.dayLabel}</p>
+          <p className="mt-1 text-lg font-black">{Number(day.date.slice(8, 10)) || ""}</p>
         </div>
-        <button
-          type="button"
-          onClick={onToggle}
-          className={`shrink-0 rounded-2xl px-4 py-3 text-sm font-black transition active:scale-[0.98] ${
-            habit.isTodayCompleted ? "bg-[#3182f6] text-white" : "bg-slate-100 text-slate-700"
-          }`}
-          aria-pressed={habit.isTodayCompleted}
-        >
-          {habit.isTodayCompleted ? "완료" : "체크"}
-        </button>
+      ))}
+    </div>
+  );
+}
+
+function HabitCard({ habit, tint, onToggle, onRename, onArchive }: { habit: HabitSummary; tint: string; onToggle: () => void; onRename: () => void; onArchive: () => void }) {
+  return (
+    <div className={`rounded-[30px] p-5 shadow-sm ring-1 ring-white/80 ${tint}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 gap-3">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">{emojiForHabit(habit)}</div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: habit.color }} />
+              <p className="text-xs font-black text-slate-400">{habit.category}</p>
+            </div>
+            <h2 className="mt-1 truncate text-xl font-black tracking-[-0.03em]">{habit.title}</h2>
+            <p className="mt-1 text-sm font-bold text-slate-500">{habit.totalCompleted} total done</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="rounded-full bg-white/80 px-3 py-1 text-xs font-black text-slate-600">{habit.streak} Days</p>
+          <button
+            type="button"
+            onClick={onToggle}
+            className={`mt-3 flex h-11 w-11 items-center justify-center rounded-full text-lg font-black shadow-sm transition active:scale-[0.96] ${
+              habit.isTodayCompleted ? "bg-[#3182f6] text-white" : "bg-white text-slate-300"
+            }`}
+            aria-pressed={habit.isTodayCompleted}
+          >
+            {habit.isTodayCompleted ? "✓" : "+"}
+          </button>
+        </div>
       </div>
 
       <div className="mt-5 grid grid-cols-7 gap-1.5">
@@ -416,8 +470,8 @@ function HabitCard({ habit, onToggle, onRename, onArchive }: { habit: HabitSumma
           <div key={day.date} className="text-center">
             <p className={`text-[11px] font-bold ${day.isToday ? "text-[#3182f6]" : "text-slate-400"}`}>{day.dayLabel}</p>
             <div
-              className={`mt-1 flex aspect-square items-center justify-center rounded-xl text-xs font-black ${
-                day.isCompleted ? "bg-[#3182f6] text-white" : day.isToday ? "bg-blue-50 text-[#3182f6] ring-1 ring-blue-100" : "bg-slate-100 text-slate-300"
+              className={`mt-1 flex aspect-square items-center justify-center rounded-full text-xs font-black ${
+                day.isCompleted ? "bg-[#3182f6] text-white" : day.isToday ? "bg-white text-[#3182f6] ring-2 ring-blue-100" : "bg-white/70 text-slate-300"
               }`}
               title={day.date}
             >
@@ -435,7 +489,7 @@ function HabitCard({ habit, onToggle, onRename, onArchive }: { habit: HabitSumma
           중단
         </button>
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -447,19 +501,45 @@ function GrassHeatmap({ days, range }: { days: GrassDay[]; range: "month" | "yea
           <div
             key={day.date}
             title={`${day.date} · ${day.count}개 완료`}
-            className={`flex items-center justify-center rounded-md text-[10px] font-black ${grassClass(day.level, day.isToday)} ${range === "month" ? "aspect-square" : "h-3.5 w-3.5"}`}
+            className={`flex items-center justify-center rounded-lg text-[10px] font-black ${grassClass(day.level, day.isToday)} ${range === "month" ? "aspect-square" : "h-3.5 w-3.5"}`}
           >
             {range === "month" ? new Date(`${day.date}T00:00:00.000Z`).getUTCDate() : ""}
           </div>
         ))}
       </div>
       <div className="mt-3 flex items-center justify-end gap-1 text-[11px] font-bold text-slate-400">
-        <span>적음</span>
+        <span>Less</span>
         {[0, 1, 2, 3].map((level) => (
           <span key={level} className={`h-3 w-3 rounded ${grassClass(level, false)}`} />
         ))}
-        <span>많음</span>
+        <span>More</span>
       </div>
+    </div>
+  );
+}
+
+function BottomNav() {
+  return (
+    <nav className="fixed bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-full bg-white/90 p-2 shadow-2xl shadow-slate-300/40 ring-1 ring-slate-100 backdrop-blur">
+      {navItems.map((item, index) => (
+        <button
+          key={item.label}
+          type="button"
+          className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-black transition ${index === 1 ? "bg-[#3182f6] text-white" : "text-slate-400 hover:bg-slate-100"}`}
+          title={item.label}
+        >
+          {item.icon}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function StatPill({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 px-3 py-3 text-center">
+      <p className="text-xl font-black text-[#3182f6]">{value}</p>
+      <p className="text-[11px] font-bold text-slate-400">{label}</p>
     </div>
   );
 }
@@ -471,6 +551,31 @@ function grassClass(level: number, isToday: boolean) {
   if (level === 1) return `${base}bg-blue-100 text-[#3182f6]`;
   if (level === 2) return `${base}bg-blue-300 text-white`;
   return `${base}bg-[#3182f6] text-white`;
+}
+
+function emojiForHabit(habit: HabitSummary) {
+  if (habit.category === "금융") return "💰";
+  if (habit.category === "건강") return "💧";
+  if (habit.category === "학습") return "📚";
+  return "✨";
+}
+
+function makeFallbackDays(todayDate: string) {
+  if (!todayDate) return [];
+
+  const labels = ["일", "월", "화", "수", "목", "금", "토"];
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(`${todayDate}T00:00:00.000Z`);
+    date.setUTCDate(date.getUTCDate() + index - 3);
+    const dateString = date.toISOString().slice(0, 10);
+
+    return {
+      date: dateString,
+      dayLabel: labels[date.getUTCDay()],
+      isCompleted: false,
+      isToday: dateString === todayDate,
+    };
+  });
 }
 
 function LoadingCard() {

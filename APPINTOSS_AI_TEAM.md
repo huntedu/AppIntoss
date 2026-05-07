@@ -81,7 +81,21 @@ Outputs:
 - Initial marketing strategy
 - Retention strategy
 
-### 5. AppIntossBot
+### 5. Development Bot
+
+Responsibilities:
+- Implement agreed product, UX, and marketing changes in the codebase.
+- Keep scope small, testable, and aligned with MVP priorities.
+- Run lint/build checks and report blockers clearly.
+- Avoid broad refactors unless they directly support the current task.
+
+Outputs:
+- Code changes
+- Technical risks
+- Verification results
+- Next development task proposal
+
+### 6. AppIntossBot
 
 Responsibilities:
 - Orchestrate the team.
@@ -96,7 +110,8 @@ Responsibilities:
 2. Planning Bot reviews business value and MVP scope.
 3. Design Bot designs UX, screens, and copy.
 4. Marketing Bot creates naming, positioning, and acquisition/retention ideas.
-5. AppIntossBot merges everything into an execution plan.
+5. Development Bot implements the agreed next slice and verifies it.
+6. AppIntossBot merges everything into an execution plan.
 
 ## Research Rule
 

@@ -1,0 +1,6 @@
+# root-level generated files from accidental builds
+/.next/
+/node_modules/
+/out/
+/data/
+/next-env.d.ts

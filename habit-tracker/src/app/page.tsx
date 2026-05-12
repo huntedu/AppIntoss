@@ -2,49 +2,18 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
-type WeekDay = {
-  date: string;
-  dayLabel: string;
-  isCompleted: boolean;
-  isToday: boolean;
-};
-
-type GrassDay = {
-  date: string;
-  dayLabel: string;
-  count: number;
-  level: number;
-  isToday: boolean;
-};
-
-type HabitSummary = {
-  id: number;
-  title: string;
-  category: string;
-  color: string;
-  createdAt: string;
-  isTodayCompleted: boolean;
-  streak: number;
-  totalCompleted: number;
-  week: WeekDay[];
-};
-
-type HabitDashboard = {
-  habits: HabitSummary[];
-  todayDate: string;
-  selectedHabitId: number | "all";
-  todayCompletedCount: number;
-  totalHabitCount: number;
-  monthGrass: GrassDay[];
-  yearGrass: GrassDay[];
-  pointMission: {
-    title: string;
-    description: string;
-    progress: number;
-    target: number;
-    status: "concept";
-  };
-};
+import { generateHapticFeedback } from "@apps-in-toss/web-framework";
+import {
+  archiveHabit as archiveHabitInStore,
+  createHabit as createHabitInStore,
+  loadHabitDashboard,
+  setTodayCheck,
+  updateHabit as updateHabitInStore,
+  type GrassDay,
+  type HabitDashboard,
+  type HabitSummary,
+  type WeekDay,
+} from "@/lib/habit-client-store";
 
 type TabKey = "add" | "today" | "grass" | "points" | "benefits";
 
@@ -150,23 +119,10 @@ export default function Home() {
     };
   }, [activeTab, dashboard.todayCompletedCount, dashboard.totalHabitCount]);
 
-  const requestDashboard = useCallback(async (path: string, init?: RequestInit) => {
-    const response = await fetch(path, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        ...init?.headers,
-      },
-    });
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error ?? "잠시 후 다시 시도해주세요.");
-    }
-
+  const applyDashboard = useCallback((data: HabitDashboard) => {
     setDashboard(data);
     setSelectedHabitId(data.selectedHabitId ?? "all");
-    return data as HabitDashboard;
+    return data;
   }, []);
 
   const refreshDashboard = useCallback(
@@ -174,14 +130,14 @@ export default function Home() {
       try {
         setIsLoading(true);
         setError("");
-        await requestDashboard(`/api/habit?habitId=${habitId}`);
+        applyDashboard(await loadHabitDashboard(habitId));
       } catch (fetchError) {
         setError(fetchError instanceof Error ? fetchError.message : "습관 정보를 불러오지 못했어요.");
       } finally {
         setIsLoading(false);
       }
     },
-    [requestDashboard],
+    [applyDashboard],
   );
 
   useEffect(() => {
@@ -197,10 +153,8 @@ export default function Home() {
 
   async function createHabitFromTitle(nextTitle: string) {
     await mutate(async () => {
-      await requestDashboard("/api/habit", {
-        method: "POST",
-        body: JSON.stringify({ title: nextTitle }),
-      });
+      applyDashboard(await createHabitInStore(nextTitle));
+      await safeHaptic("tap");
       setTitle("");
       setActiveTab("today");
     });
@@ -228,10 +182,8 @@ export default function Home() {
 
     try {
       setError("");
-      await requestDashboard("/api/check/today", {
-        method: "PUT",
-        body: JSON.stringify({ habitId: habit.id, isCompleted: nextCompleted }),
-      });
+      applyDashboard(await setTodayCheck(habit.id, nextCompleted));
+      await safeHaptic(nextCompleted ? "success" : "tickWeak");
     } catch (toggleError) {
       setDashboard(previous);
       setError(toggleError instanceof Error ? toggleError.message : "오늘 체크에 실패했어요.");
@@ -246,10 +198,8 @@ export default function Home() {
     }
 
     await mutate(async () => {
-      await requestDashboard("/api/habit", {
-        method: "PATCH",
-        body: JSON.stringify({ id: habit.id, title: nextTitle }),
-      });
+      applyDashboard(await updateHabitInStore(habit.id, nextTitle));
+      await safeHaptic("tap");
     });
   }
 
@@ -259,10 +209,8 @@ export default function Home() {
     }
 
     await mutate(async () => {
-      await requestDashboard("/api/habit", {
-        method: "DELETE",
-        body: JSON.stringify({ id: habit.id }),
-      });
+      applyDashboard(await archiveHabitInStore(habit.id));
+      await safeHaptic("tickWeak");
     });
   }
 
@@ -358,6 +306,14 @@ export default function Home() {
       </section>
     </main>
   );
+}
+
+async function safeHaptic(type: "tap" | "success" | "tickWeak") {
+  try {
+    await generateHapticFeedback({ type });
+  } catch {
+    // 일반 브라우저와 일부 샌드박스에서는 Toss bridge가 없을 수 있습니다.
+  }
 }
 
 function TopBar({ title, onShowAll, onOpenBenefits }: { title: string; onShowAll: () => void; onOpenBenefits: () => void }) {
